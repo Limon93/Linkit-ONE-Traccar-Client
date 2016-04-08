@@ -23,9 +23,10 @@
 #include "struct.h"
 #define LEDGPS   13
 
+
 //PARAMETERS
 
-#define	UPDATE_FREQ			10		// INSERT CLIENT POSITION UPDATE INTERVAL IN SECONDS
+#define  UPDATE_FREQ     10    // INSERT CLIENT POSITION UPDATE INTERVAL IN SECONDS
 char USERID[20] =  "123456789"; // INSERT YOUR TRACCAR SERVER USER ID
 char server[] = "demo.traccar.org"; //INSERT YOUR SERVER ADDRESS (aaa.com or xxx.xxx.xxx.xxx)
 int port = 5055; // INSERT YOUR SERVER PORT
@@ -39,6 +40,20 @@ gpsSentenceInfoStruct info;
 LGPRSClient client;
 char buff[512];
 
+
+static double getDoubleNumber(const char *s)
+{
+  char buf[10];
+  unsigned char i;
+  double rev;
+  
+  i=getComma(1, s);
+  i = i - 1;
+  strncpy(buf, s, i);
+  buf[i] = 0;
+  rev=atof(buf);
+  return rev; 
+}
 static unsigned char getComma(unsigned char num,const char *str){
 	unsigned char i,j = 0;
 	int len=strlen(str);
@@ -161,8 +176,9 @@ void convertCoords(float latitude, float longitude, float &lat_return, float &lo
 void GetGPSPos(void){
 		Serial.println("--- LGPS loop ---"); 
 		LGPS.getData(&info);
-		//Serial.print((char*)info.GPGGA); 
-		parseGPGGA((const char*)info.GPGGA);
+		parseGPRMC((const char*)info.GPRMC);
+    LGPS.getData(&info);
+    parseGPGGA((const char*)info.GPGGA);
 				
 		//check fix 
 		//if GPS fix is OK
@@ -178,6 +194,25 @@ void GetGPSPos(void){
 		Serial.println(buff);
 		Serial.println();
 }
+void parseGPRMC(const char* GPRMCstr)
+{
+  double spd;
+  int tmp, hour, minute, second, date, num ;
+  if(GPRMCstr[0] == '$')
+  {
+    tmp = getComma(7, GPRMCstr);
+    spd = getDoubleNumber(&GPRMCstr[tmp]);    
+    sprintf(buff, "Speed(knots) = %5.2f", spd);
+    Serial.println(buff); 
+    MyGPSPos.spd=spd;
+  }
+  else
+  {
+    Serial.println("Unable to get speed data."); 
+  }
+}
+
+
 
 void setup() {
 	// put your setup code here, to run once:
@@ -219,7 +254,7 @@ void loop() {
 	  if (MyFlag.fix3D){
     Serial.println("Periodic update."); 
     char path[200]; 
-    sprintf(path,"/?id=%s&lat=%2.6f&lon=%3.6f&altitude=%d",USERID,MyGPSPos.latitude, MyGPSPos.longitude,MyGPSPos.alt);
+    sprintf(path,"/?id=%s&lat=%2.6f&lon=%3.6f&altitude=%d&speed=%4.2f",USERID,MyGPSPos.latitude, MyGPSPos.longitude,MyGPSPos.alt,MyGPSPos.spd);
     if (client.connect(server, port))
     {
     Serial.println("Connected to network and server.");

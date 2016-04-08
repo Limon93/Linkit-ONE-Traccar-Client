@@ -10,6 +10,7 @@ struct GPSPos {
 	int	num;
 	int fix;
   int alt;
+  int spd;
 	}MyGPSPos;
 
 struct FlagReg {
