@@ -254,7 +254,7 @@ void loop() {
 	  if (MyFlag.fix3D){
     Serial.println("Periodic update."); 
     char path[200]; 
-    sprintf(path,"/?id=%s&lat=%2.6f&lon=%3.6f&altitude=%d&speed=%4.2f",USERID,MyGPSPos.latitude, MyGPSPos.longitude,MyGPSPos.alt,MyGPSPos.spd);
+    sprintf(path,"/?id=%s&lat=%2.6f&lon=%3.6f&altitude=%d&speed=%d",USERID,MyGPSPos.latitude, MyGPSPos.longitude,MyGPSPos.alt,MyGPSPos.spd);
     if (client.connect(server, port))
     {
     Serial.println("Connected to network and server.");
